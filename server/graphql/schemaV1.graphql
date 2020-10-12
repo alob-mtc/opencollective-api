@@ -1999,7 +1999,6 @@ type Mutation {
   createComment(comment: CommentInputType!): CommentType
   editComment(comment: CommentAttributesInputType!): CommentType
   deleteComment(id: Int!): CommentType
-  cancelSubscription(id: Int!): OrderType
   refundTransaction(id: Int!): Transaction
   addFundsToOrg(totalAmount: Int!, CollectiveId: Int!, HostCollectiveId: Int!, description: String): PaymentMethodType
   createApplication(application: ApplicationInput!): Application

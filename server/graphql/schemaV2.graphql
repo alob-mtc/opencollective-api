@@ -2503,6 +2503,23 @@ input CreditCardCreateInput {
   zip: String
 }
 
+type CreditCardWithStripeError {
+  """
+  The payment method created
+  """
+  paymentMethod: PaymentMethod!
+
+  """
+  This field will be set if there was an error with Stripe during strong customer authentication
+  """
+  stripeError: StripeError
+
+  """
+  If the Payment Method needs to be marked as saved again during confirmCreditCard
+  """
+  shouldBeSaved: Boolean
+}
+
 """
 All supported currencies
 """
@@ -4703,16 +4720,6 @@ type Mutation {
   ): Order
 
   """
-  Reactivate a cancelled order
-  """
-  activateOrder(
-    """
-    Object matching the OrderReferenceInput (id)
-    """
-    order: OrderReferenceInput!
-  ): Order
-
-  """
   Update an Order's amount, tier, or payment method
   """
   updateOrder(
@@ -4743,60 +4750,62 @@ type Mutation {
   """
   addCreditCard(
     """
-    A Payment Method to add to an Account
-    """
-    paymentMethod: PaymentMethodCreateInput
-
-    """
     The credit card info
     """
-    creditCardInfo: CreditCardCreateInput
+    creditCardInfo: CreditCardCreateInput!
 
     """
     Name associated to this credit card
     """
-    name: String
+    name: String!
 
     """
-    Wether this payment method should be saved for future payments
+    Whether this credit card should be saved for future payments
     """
     isSavedForLater: Boolean = true
 
     """
-    Account to add Payment Method to
+    Account to add the credit card to
     """
     account: AccountReferenceInput!
-  ): PaymentMethod!
+  ): CreditCardWithStripeError!
 
   """
   Add a new payment method to be used with an Order
   """
   addStripeCreditCard(
     """
-    A Payment Method to add to an Account
-    """
-    paymentMethod: PaymentMethodCreateInput
-
-    """
     The credit card info
     """
-    creditCardInfo: CreditCardCreateInput
+    creditCardInfo: CreditCardCreateInput!
 
     """
     Name associated to this credit card
     """
-    name: String
+    name: String!
 
     """
-    Wether this payment method should be saved for future payments
+    Whether this credit card should be saved for future payments
     """
     isSavedForLater: Boolean = true
 
     """
-    Account to add Payment Method to
+    Account to add the credit card to
     """
     account: AccountReferenceInput!
-  ): PaymentMethod! @deprecated(reason: "2020-08-24: Use addCreditCard")
+  ): CreditCardWithStripeError! @deprecated(reason: "2020-08-24: Use addCreditCard")
+
+  """
+  Confirm a credit card is ready for use after strong customer authentication
+  """
+  confirmCreditCard(
+    paymentMethod: PaymentMethodReferenceInput!
+
+    """
+    Whether this payment method should be marked as saved for future payments
+    """
+    shouldBeSaved: Boolean
+  ): CreditCardWithStripeError!
 
   """
   Refunds transaction
@@ -5241,22 +5250,6 @@ type PaymentMethod {
   limitedToHosts: [Host]
   expiryDate: ISODateTime
   createdAt: ISODateTime
-}
-
-input PaymentMethodCreateInput {
-  data: PaymentMethodDataInput
-  name: String
-  token: String
-}
-
-input PaymentMethodDataInput {
-  brand: String!
-  country: String!
-  expMonth: Int!
-  expYear: Int!
-  fullName: String
-  funding: String
-  zip: String
 }
 
 """
