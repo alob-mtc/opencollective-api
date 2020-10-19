@@ -4,9 +4,13 @@ import { isEmpty } from 'lodash';
 import { v4 as uuid } from 'uuid';
 
 import { types as COLLECTIVE_TYPE } from '../constants/collectives';
-import models, { sequelize } from '../models';
+import { BadRequest, InvalidToken } from '../graphql/errors';
+import models, { Op, sequelize } from '../models';
+
+import { mergeCollectives } from './collectivelib';
 
 const INVALID_TOKEN_MSG = 'Your guest token is invalid. If you already have an account, please sign in.';
+const DEFAULT_GUEST_NAME = 'Guest';
 
 type GuestProfileDetails = {
   user: typeof models.User;
@@ -60,7 +64,7 @@ const createGuestProfile = (
       {
         type: COLLECTIVE_TYPE.USER,
         slug: `guest-${uuid().split('-')[0]}`,
-        name: name ?? 'Guest',
+        name: name ?? DEFAULT_GUEST_NAME,
         data: { isGuest: true },
         address: location?.address,
         countryISO: location?.country,
@@ -165,4 +169,62 @@ export const getOrCreateGuestProfile = async ({
     // token don't match.
     return createGuestProfile(email, name, location);
   }
+};
+
+export const confirmGuestAccount = async (
+  emailConfirmationToken: string,
+  name?: string | null,
+  guestTokensValues?: string[] | null,
+): Promise<Record<string, unknown>> => {
+  // Mark user as confirmed
+  const user = await models.User.findOne({ where: { emailConfirmationToken } });
+  if (!user) {
+    throw new InvalidToken('Invalid email confirmation token', null, { internalData: { emailConfirmationToken } });
+  } else if (user.confirmedAt) {
+    // `emailConfirmationToken` is also used when users change their emails. If the account if already confirmed,
+    // there's no reason to go through this function even if the token is valid.
+    throw new BadRequest('This account has already been verified', 'ACCOUNT_ALREADY_VERIFIED');
+  }
+
+  await user.update({ emailConfirmationToken: null, confirmedAt: new Date() });
+
+  // Update the profile
+  const userCollective = await user.getCollective();
+  const newName = name ?? (userCollective.name !== DEFAULT_GUEST_NAME ? userCollective.name : 'Incognito');
+  await userCollective.update({
+    name: newName,
+    slug: await models.Collective.generateSlug([newName]),
+    data: { ...userCollective.data, isGuest: false },
+  });
+
+  const allCollectiveIds = [userCollective.id];
+
+  // Link the other guest profiles
+  if (guestTokensValues?.length) {
+    const guestTokens = await models.GuestToken.findAll({
+      where: { value: { [Op.in]: guestTokensValues } },
+      include: [
+        {
+          association: 'collective',
+          required: true,
+          where: {
+            id: { [Op.ne]: userCollective.id },
+            data: { isGuest: true },
+          },
+        },
+      ],
+    });
+
+    if (guestTokens.length > 0) {
+      allCollectiveIds.push(...guestTokens.map(token => token.CollectiveId));
+      await Promise.all(guestTokens.map(token => mergeCollectives(token.collective, userCollective)));
+    }
+  }
+
+  // Delete all guest tokens
+  await models.GuestToken.destroy({
+    where: { CollectiveId: { [Op.in]: allCollectiveIds } },
+  });
+
+  return userCollective;
 };

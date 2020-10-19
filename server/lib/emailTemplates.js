@@ -41,6 +41,7 @@ export const templateNames = [
   'collective.monthlyreport.text',
   'collective.newmember',
   'collective.update.published',
+  'confirm-guest-account',
   'event.newmember',
   'event.reminder.1d',
   'event.reminder.7d',

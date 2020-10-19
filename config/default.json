@@ -49,6 +49,8 @@
       "update": 10,
       "confirmToken": 15
     },
+    "confirmGuestEmailPerMinute": 1,
+    "confirmGuestEmailPerMinutePerIp": 2,
     "maxNumberOfAppsPerUser": 15,
     "maxWebhooksPerUserPerCollective": 50,
     "searchEmailPerHour": 150,

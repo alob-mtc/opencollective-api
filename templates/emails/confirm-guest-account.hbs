@@ -1,0 +1,29 @@
+Subject: Open Collective: Verify your email address
+
+{{> header}}
+
+<h1>Confirm email</h1>
+
+<center>
+  <h3>Thanks for singing up for Open Collective!</h3>
+  <p>
+    Please confirm your email ({{email}}) by clicking the button below.
+  </p>
+  <a href="{{verifyAccountLink}}" class="btn blue"><div>Confirm</div></a>
+  <p>
+    Link not working? Try this:<br/>
+    <a href="{{verifyAccountLink}}" class="btn blue">{{verifyAccountLink}}</a>
+  </p>
+</center>
+
+<div itemscope itemtype="http://schema.org/EmailMessage">
+  <div itemprop="potentialAction" itemscope itemtype="http://schema.org/ViewAction">
+    <link itemprop="url" content="{{verifyAccountLink}}"/>
+    <meta itemprop="name" content="Verify email"/>
+  </div>
+  <meta itemprop="description" content="Verify email"/>
+</div>
+
+<p>It's good to have you!</p>
+
+{{> footer}}

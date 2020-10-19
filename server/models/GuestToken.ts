@@ -55,6 +55,7 @@ export default (sequelize, DataTypes): typeof GuestToken => {
     {
       sequelize,
       tableName: 'GuestTokens',
+      paranoid: true,
     },
   );
 

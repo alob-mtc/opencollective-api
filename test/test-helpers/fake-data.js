@@ -338,7 +338,7 @@ export const fakeTier = async (tierData = {}) => {
 /**
  * Creates a fake order. All params are optionals.
  */
-export const fakeOrder = async (orderData = {}) => {
+export const fakeOrder = async (orderData = {}, { withTransactions } = {}) => {
   const CreatedByUserId = orderData.CreatedByUserId || (await fakeUser()).id;
   const user = await models.User.findByPk(CreatedByUserId);
   const FromCollectiveId = orderData.FromCollectiveId || (await models.Collective.findByPk(user.CollectiveId)).id;
@@ -357,6 +357,25 @@ export const fakeOrder = async (orderData = {}) => {
 
   if (order.PaymentMethodId) {
     order.paymentMethod = await models.PaymentMethod.findByPk(order.PaymentMethodId);
+  }
+
+  if (withTransactions) {
+    order.transactions = await Promise.all([
+      fakeTransaction({
+        OrderId: order.id,
+        type: 'CREDIT',
+        FromCollectiveId: order.FromCollectiveId,
+        CollectiveId: order.CollectiveId,
+        amount: order.amount,
+      }),
+      fakeTransaction({
+        OrderId: order.id,
+        type: 'DEBIT',
+        CollectiveId: order.FromCollectiveId,
+        FromCollectiveId: order.CollectiveId,
+        amount: -order.amount,
+      }),
+    ]);
   }
 
   order.fromCollective = await models.Collective.findByPk(order.FromCollectiveId);
