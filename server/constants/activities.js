@@ -27,7 +27,6 @@ export default {
   COLLECTIVE_TRANSACTION_CREATED: 'collective.transaction.created',
   COLLECTIVE_UPDATE_CREATED: 'collective.update.created',
   COLLECTIVE_UPDATE_PUBLISHED: 'collective.update.published',
-  COLLECTIVE_USER_ADDED: 'collective.user.added',
   COLLECTIVE_CONTACT: 'collective.contact',
   ORGANIZATION_COLLECTIVE_CREATED: 'organization.collective.created',
   SUBSCRIPTION_ACTIVATED: 'subscription.activated',
@@ -46,4 +45,5 @@ export default {
 
   // Not used anymore, leaving for historical reference
   COLLECTIVE_TRANSACTION_PAID: 'collective.transaction.paid', // replaced with COLLECTIVE_EXPENSE_PAID
+  COLLECTIVE_USER_ADDED: 'collective.user.added',
 };
